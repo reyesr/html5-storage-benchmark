@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5 Storage Benchmark</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <script type="text/javascript" src="js/utils.js"></script>
+    <script type="text/javascript" src="js/tests.js"></script>
+    <script type="text/javascript" src="js/local-storage.js"></script>
+    <script type="text/javascript" src="js/indexeddb-storage.js"></script>
+    <script type="text/javascript" src="js/websql-storage.js"></script>
+    <script type="text/javascript" src="js/benchmark.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="css/benchmark.css" />
+
+</head>
+<body>
+<div class="header">
+    <div class="html5logo"> <img src="img/HTML5.png"></div>
+    <h1>HTML5 Offline Storage Benchmark</h1>
+    <div id="ua" class="useragent"></div>
+</div>
+<div id="finalchart"></div>
+<div id="charts"></div>
+<div id="result"></div>
+
+<script type="text/javascript">
+
+    var localStorageTester = new LocalStorageAccess();
+    var indexedDbTester = new IndexedDBAccess();
+    var webSQLTester = new WebSQLAccess();
+    var benchmark = new Benchmark($("#result"));
+
+    function testDisabled(testManager) {
+        testManager.setError("not available");
+        testManager.testComplete(false);
+    }
+
+    function createTest(group, stores, maker, desc) {
+        for (var i=0; i<stores.length; ++i) {
+            if (stores[i].isAvailable) {
+                benchmark.addTest(group, stores[i].displayName, maker.call(this, stores[i]), desc);
+            } else {
+                benchmark.addTest(group, stores[i].displayName, testDisabled, desc);
+            }
+        }
+    }
+
+    function startTest() {
+        var injectCount = 50;
+        var bulkInjectCount = 2000;
+        var indexes = [];
+
+        indexes.push(localStorageTester);
+        indexes.push(webSQLTester);
+        indexes.push(indexedDbTester);
+
+        createTest("Lookup", indexes, function (store) { return mkTestLookup(store, bulkInjectCount, 8, 8); }, "Looking up " + injectCount + "x 8-byte elements, one by one");
+        createTest("Inject (small)", indexes, function (store) { return mkTestInject(store, injectCount, 8, 8); }, "Injecting " + injectCount + "x 8-byte elements, one by one");
+        createTest("Inject (large)", indexes, function (store) { return mkTestInject(store, injectCount, 8, 512); }, "Injecting " + injectCount + "x 512-byte elements, one by one");
+        createTest("InjectBulk (small)", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 8); }, "Injecting " + bulkInjectCount + "x 8-byte elements, in bulk");
+        createTest("InjectBulk (large)", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 512); }, "Injecting " + bulkInjectCount + "x 512-byte elements, in bulk");
+
+        benchmark.start(function() {
+            makeFinalChart(benchmark, $("#finalchart"));
+            localStorageTester.close(function() {
+                indexedDbTester.close(function() {
+                    webSQLTester.close(function() {});
+                });
+            });
+        });
+    }
+
+    google.load("visualization", "1", {packages:["corechart"]});
+    var drawChartSynchronizer = mk_sync_func(startTest, 2);
+    google.setOnLoadCallback(drawChartSynchronizer);
+
+    $(document).ready(function() {
+        $("#ua").html(navigator.userAgent);
+
+        function openIfAvailable(storage, name) {
+            storage.displayName = name;
+            if (storage.isAvailable) {
+                storage.open(function() {
+                    storeSync();
+                });
+            } else {
+                storeSync();
+            }
+        }
+
+        var storeSync = mk_sync_func(drawChartSynchronizer, 3);
+        openIfAvailable(localStorageTester, "localStorage");
+        openIfAvailable(indexedDbTester, "IndexedDB");
+        openIfAvailable(webSQLTester, "webSQL");
+
+    });
+
+    </script>
+
+    </body>
+</html>
