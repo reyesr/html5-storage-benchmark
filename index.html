@@ -1,74 +1,107 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5 Storage Benchmark</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
 
-  <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Html5-storage-benchmark : Benchmarks HTML5 Storages : localStorage, IndexedDB, WebSQL" />
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <script type="text/javascript" src="js/utils.js"></script>
+    <script type="text/javascript" src="js/tests.js"></script>
+    <script type="text/javascript" src="js/local-storage.js"></script>
+    <script type="text/javascript" src="js/indexeddb-storage.js"></script>
+    <script type="text/javascript" src="js/websql-storage.js"></script>
+    <script type="text/javascript" src="js/benchmark.js"></script>
 
-    <title>Html5-storage-benchmark</title>
-  </head>
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="css/benchmark.css" />
 
-  <body>
+</head>
+<body>
+<div class="header">
+    <div class="html5logo"> <img src="img/HTML5.png"></div>
+    <h1>HTML5 Offline Storage Benchmark</h1>
+    <div id="ua" class="useragent"></div>
+</div>
+<div id="finalchart"></div>
+<div id="charts"></div>
+<div id="result"></div>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/reyesr/html5-storage-benchmark">View on GitHub</a>
+<script type="text/javascript">
 
-          <h1 id="project_title">Html5-storage-benchmark</h1>
-          <h2 id="project_tagline">Benchmarks HTML5 Storages : localStorage, IndexedDB, WebSQL</h2>
+    var localStorageTester = new LocalStorageAccess();
+    var indexedDbTester = new IndexedDBAccess();
+    var webSQLTester = new WebSQLAccess();
+    var benchmark = new Benchmark($("#result"));
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/reyesr/html5-storage-benchmark/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/reyesr/html5-storage-benchmark/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+    function testDisabled(testManager) {
+        testManager.setError("not available");
+        testManager.testComplete(false);
+    }
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>Welcome to GitHub Pages.</h3>
+    function createTest(group, stores, maker, desc) {
+        for (var i=0; i<stores.length; ++i) {
+            if (stores[i].isAvailable) {
+                benchmark.addTest(group, stores[i].displayName, maker.call(this, stores[i]), desc);
+            } else {
+                benchmark.addTest(group, stores[i].displayName, testDisabled, desc);
+            }
+        }
+    }
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+    function startTest() {
+        var injectCount = 50;
+        var bulkInjectCount = 2000;
+        var indexes = [];
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+        indexes.push(localStorageTester);
+        indexes.push(webSQLTester);
+        indexes.push(indexedDbTester);
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+        createTest("Lookup", indexes, function (store) { return mkTestLookup(store, bulkInjectCount, 8, 8); }, "Looking up " + injectCount + "x 8-byte elements, one by one");
+        createTest("Inject-S", indexes, function (store) { return mkTestInject(store, injectCount, 8, 8); }, "Injecting " + injectCount + "x 8-byte elements, one by one");
+        createTest("Inject-L", indexes, function (store) { return mkTestInject(store, injectCount, 8, 512); }, "Injecting " + injectCount + "x 512-byte elements, one by one");
+        createTest("InjectBulk-S", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 8); }, "Injecting " + bulkInjectCount + "x 8-byte elements, in bulk");
+        createTest("InjectBulk-L", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 512); }, "Injecting " + bulkInjectCount + "x 512-byte elements, in bulk");
+        createTest("Clear", indexes, function (store) { return mkTestClear(store, bulkInjectCount, 8, 512); }, "Clearing " + bulkInjectCount + " 512-byte elements");
 
-<h3>Designer Templates</h3>
+        benchmark.start(function() {
+            makeFinalChart(benchmark, $("#finalchart"));
+            localStorageTester.close(function() {
+                indexedDbTester.close(function() {
+                    webSQLTester.close(function() {});
+                });
+            });
+        });
+    }
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+    google.load("visualization", "1", {packages:["corechart"]});
+    var drawChartSynchronizer = mk_sync_func(startTest, 2);
+    google.setOnLoadCallback(drawChartSynchronizer);
 
-<h3>Rather Drive Stick?</h3>
+    $(document).ready(function() {
+        $("#ua").html(navigator.userAgent);
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+        function openIfAvailable(storage, name) {
+            storage.displayName = name;
+            if (storage.isAvailable) {
+                storage.open(function() {
+                    storeSync();
+                });
+            } else {
+                storeSync();
+            }
+        }
 
-<h3>Authors and Contributors</h3>
+        var storeSync = mk_sync_func(drawChartSynchronizer, 3);
+        openIfAvailable(localStorageTester, "localStorage");
+        openIfAvailable(indexedDbTester, "IndexedDB");
+        openIfAvailable(webSQLTester, "webSQL");
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+    });
 
-<h3>Support or Contact</h3>
+    </script>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Html5-storage-benchmark maintained by <a href="https://github.com/reyesr">reyesr</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
-
-  </body>
+    </body>
 </html>
