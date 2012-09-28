@@ -80,14 +80,14 @@ function mkTestInject(store, count, keySize, valueSize) {
 
                 function injector(keys, values, offset, callback) {
                     if (offset >= keys.length) {
-                        return callback(true);
+                        callback(true);
+                    } else {
+                        index.inject(keys[offset], values[offset], function() {
+                            setTimeout(function() {
+                                injector(keys, values, offset+1, callback);
+                            },0);
+                        });
                     }
-
-                    index.inject(keys[offset], values[offset], function() {
-                        setTimeout(function() {
-                            injector(keys, values, offset+1, callback);
-                        },0);
-                    });
                 }
 
                 testManager.startTimer();

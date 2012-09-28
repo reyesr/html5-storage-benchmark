@@ -34,12 +34,13 @@ function LocalStorageAccess() {
 
     function bulk(keys, values, offset, batchSize, callback) {
         if (offset >= keys.length) {
-            return callback();
+            callback();
+        } else {
+            for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
+                localStorage[keys[i]] = values[i];
+            }
+            setTimeout(function() { bulk(keys, values, offset+batchSize, batchSize, callback); }, 0);
         }
-        for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
-            localStorage[keys[i]] = values[i];
-        }
-        setTimeout(function() { bulk(keys, values, offset+batchSize, batchSize, callback); }, 0);
     }
 
     this.injectBulk = function(keys, values, callback) {

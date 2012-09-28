@@ -75,7 +75,7 @@ function Benchmark($root) {
 
             jQuery.each(tests, function(it, test) {
                 var testhtml = "<div class='testunit waiting'><div class='testcontainer'>";
-                testhtml += "<div class='status'>Waiting</div>";
+                testhtml += "<div class='status'></div>";
                 testhtml += "<div class='test'><div class='name'>" + test.name + " <div class='result'></div></div>";
                 testhtml += "</div>";
                 testhtml += "</div></div>";
@@ -134,31 +134,31 @@ function Benchmark($root) {
         function proc() {
             if (remaining.length === 0) {
                 return callback();
-            }
-
-            var test = remaining.shift();
-            if (typeof test === "string") {
-                addChart(self.groupToDom[test].find(".chart"), test, self.getForGroup(test));
-                setTimeout(proc, 300);
             } else {
-                test.dom.addClass("running");
-                test.dom.find(".status").html("Running...");
-                var tmgr = new TestManager(function(res) {
-                    var isSuccess = tmgr.getTimeMillis() != NaN && res;
+                var test = remaining.shift();
+                if (typeof test === "string") {
+                    addChart(self.groupToDom[test].find(".chart"), test, self.getForGroup(test));
+                    setTimeout(proc, 300);
+                } else {
+                    test.dom.addClass("running");
+                    test.dom.find(".status").html("Running...");
+                    var tmgr = new TestManager(function(res) {
+                        var isSuccess = tmgr.getTimeMillis() != NaN && res;
 
-                    test.dom.removeClass("running");
-                    test.dom.addClass(isSuccess?"passed":"failed");
-                    var timed = tmgr.getTimeMillis();
-                    self.results.push(tmgr);
-                    test.dom.find(".result").html(isSuccess?(timed.toFixed(2) + "ms"):tmgr.errorDescription);
-                    test.dom.find(".status").html(isSuccess?"Passed":"Failed");
-                    test.result = {time: timed};
+                        test.dom.removeClass("running");
+                        test.dom.addClass(isSuccess?"passed":"failed");
+                        var timed = tmgr.getTimeMillis();
+                        self.results.push(tmgr);
+                        test.dom.find(".result").html(isSuccess?(timed.toFixed(2) + "ms"):tmgr.errorDescription);
+                        test.dom.find(".status").html(isSuccess?"Passed":"Failed");
+                        test.result = {time: timed};
 
-                    setTimeout(proc, 1);
-                });
-                setTimeout(function() {
-                    test.test(tmgr);
-                }, 1);
+                        setTimeout(proc, 1);
+                    });
+                    setTimeout(function() {
+                        test.test(tmgr);
+                    }, 1);
+                }
             }
         }
         proc();
@@ -196,19 +196,19 @@ function Benchmark($root) {
         chart.draw(data, options);
     }
 
-    /**
-     * Initialize the dom with the tests added, and start the test execution. Needs to be called when all the tests have been added with addTest().
-     * @param callback
-     */
-    this.start = function(callback) {
-        this.prepareTests();
-        var self = this;
-        setTimeout(function() {
-            self.startTests(function() {
-                callback();
-            });
-        }, 50);
-    };
+//    /**
+//     * Initialize the dom with the tests added, and start the test execution. Needs to be called when all the tests have been added with addTest().
+//     * @param callback
+//     */
+//    this.start = function(callback) {
+//        this.prepareTests();
+//        var self = this;
+//        setTimeout(function() {
+//            self.startTests(function() {
+//                callback();
+//            });
+//        }, 50);
+//    };
 
     /**
      * Returns an array of all the group added to this object.
@@ -220,7 +220,9 @@ function Benchmark($root) {
             collected[this.tests[i].group] = true;
         }
         for (var k in collected) {
-            result.push(k);
+            if (collected.hasOwnProperty(k)) {
+                result.push(k);
+            }
         }
         result.sort();
         return result;

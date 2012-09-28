@@ -82,19 +82,19 @@ function IndexedDBAccess() {
 
     function bulk(self, keys, values, offset, batchSize, callback) {
         if (offset >= keys.length) {
-            return callback(true);
-        }
+            callback(true);
+        } else {
+            var tx = self.database.transaction([self.storeName], self.READWRITEMODE);
+            var store = tx.objectStore(self.storeName);
 
-        var tx = self.database.transaction([self.storeName], self.READWRITEMODE);
-        var store = tx.objectStore(self.storeName);
-
-        for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
-            store.put({key: keys[i], value: values[i]});
-        }
+            for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
+                store.put({key: keys[i], value: values[i]});
+            }
 //        req.onsuccess = function(){};
 //        req.onerror = function(){};
-        tx.oncomplete = function() { setTimeout(function() { bulk(self, keys, values, offset+batchSize, batchSize, callback); }, 1); };
-        tx.onerror = function() { callback(false);};
+            tx.oncomplete = function() { setTimeout(function() { bulk(self, keys, values, offset+batchSize, batchSize, callback); }, 1); };
+            tx.onerror = function() { callback(false);};
+        }
     }
 
     this.injectBulk = function(keys, values, callback) {

@@ -51,21 +51,22 @@ function WebSQLAccess() {
 
     function bulk(self, keys, values, offset, batchSize, callback) {
         if (offset >= keys.length) {
-            return callback();
+            callback();
+        } else {
+            self.db.transaction(function(tx) {
+                var ok = true;
+                var end = Math.min(keys.length, offset + batchSize);
+                for (var i= offset; i<end; ++i) {
+                    tx.executeSql("INSERT OR REPLACE INTO " + self.storeName+ " (key,value) VALUES (?,?)", [keys[i], values[i]],
+                        function(){}, function(){ok=false;});
+                }
+                if (ok) {
+                    setTimeout(function(){bulk(self, keys,values,end,batchSize,callback)},1);
+                } else {
+                    callback(false);
+                }
+            });
         }
-        self.db.transaction(function(tx) {
-            var ok = true;
-            var end = Math.min(keys.length, offset + batchSize);
-            for (var i= offset; i<end; ++i) {
-                tx.executeSql("INSERT OR REPLACE INTO " + self.storeName+ " (key,value) VALUES (?,?)", [keys[i], values[i]],
-                    function(){}, function(){ok=false;});
-            }
-            if (ok) {
-                setTimeout(function(){bulk(self, keys,values,end,batchSize,callback)},1);
-            } else {
-                callback(false);
-            }
-        });
     }
 
     this.injectBulk = function(keys, values, callback) {
