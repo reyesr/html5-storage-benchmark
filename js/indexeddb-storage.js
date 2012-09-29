@@ -88,11 +88,16 @@ function IndexedDBAccess() {
             var store = tx.objectStore(self.storeName);
 
             for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
-                store.put({key: keys[i], value: values[i]});
+                var req = store.put({key: keys[i], value: values[i]});
             }
-//        req.onsuccess = function(){};
-//        req.onerror = function(){};
-            tx.oncomplete = function() { setTimeout(function() { bulk(self, keys, values, offset+batchSize, batchSize, callback); }, 1); };
+            var stop = false;
+            req.onsuccess = function(){};
+            req.onerror = function(){stop=true;};
+            tx.oncomplete = function() {
+                if (!stop) {
+                    setTimeout(function() { bulk(self, keys, values, offset+batchSize, batchSize, callback); }, 1);
+                }
+            };
             tx.onerror = function() { callback(false);};
         }
     }
@@ -105,9 +110,10 @@ function IndexedDBAccess() {
         var tx = this.database.transaction([this.storeName], this.READWRITEMODE);
         var store = tx.objectStore(this.storeName);
         var req = store.clear();
+        var result = true;
         req.onsuccess = function(){};
-        req.onerror = function(){};
-        tx.oncomplete = function() { callback(true);};
+        req.onerror = function(){result=false};
+        tx.oncomplete = function() { callback(result);};
         tx.onerror = function() { callback(false);};
     }
 

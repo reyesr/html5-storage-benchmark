@@ -51,7 +51,7 @@ function WebSQLAccess() {
 
     function bulk(self, keys, values, offset, batchSize, callback) {
         if (offset >= keys.length) {
-            callback();
+            callback(true);
         } else {
             self.db.transaction(function(tx) {
                 var ok = true;

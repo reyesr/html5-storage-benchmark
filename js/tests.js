@@ -115,9 +115,9 @@ function mkTestInjectBulk(store, count, keySize, valueSize) {
                 }
 
                 testManager.startTimer();
-                index.injectBulk(keys, values, function() {
+                index.injectBulk(keys, values, function(res) {
                     testManager.stopTimer();
-                    testManager.testComplete(true);
+                    testManager.testComplete(res);
                 });
             });
         } else {
