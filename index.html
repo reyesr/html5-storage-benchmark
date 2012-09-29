@@ -24,7 +24,7 @@
     <h1>HTML5 Offline Storage Benchmark</h1>
     <div id="ua" class="useragent"></div>
 </div>
-<div id="finalchart"></div>
+<div id="finalchart"><button class="inactive" disabled="disabled" id="startbutton">Initializing...</button></div>
 <div id="charts"></div>
 <div id="result"></div>
 
@@ -50,7 +50,7 @@
         }
     }
 
-    function startTest() {
+    function initTests() {
         var injectCount = 50;
         var bulkInjectCount = 2000;
         var indexes = [];
@@ -60,12 +60,21 @@
         indexes.push(indexedDbTester);
 
         createTest("Lookup", indexes, function (store) { return mkTestLookup(store, bulkInjectCount, 8, 8); }, "Looking up " + injectCount + "x 8-byte elements, one by one");
-        createTest("Inject (small)", indexes, function (store) { return mkTestInject(store, injectCount, 8, 8); }, "Injecting " + injectCount + "x 8-byte elements, one by one");
-        createTest("Inject (large)", indexes, function (store) { return mkTestInject(store, injectCount, 8, 512); }, "Injecting " + injectCount + "x 512-byte elements, one by one");
-        createTest("InjectBulk (small)", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 8); }, "Injecting " + bulkInjectCount + "x 8-byte elements, in bulk");
-        createTest("InjectBulk (large)", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 512); }, "Injecting " + bulkInjectCount + "x 512-byte elements, in bulk");
+        createTest("Inject-S", indexes, function (store) { return mkTestInject(store, injectCount, 8, 8); }, "Injecting " + injectCount + "x 8-byte elements, one by one");
+        createTest("Inject-L", indexes, function (store) { return mkTestInject(store, injectCount, 8, 512); }, "Injecting " + injectCount + "x 512-byte elements, one by one");
+        createTest("InjectBulk-S", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 8); }, "Injecting " + bulkInjectCount + "x 8-byte elements, in bulk");
+        createTest("InjectBulk-L", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 512); }, "Injecting " + bulkInjectCount + "x 512-byte elements, in bulk");
+        createTest("Clear", indexes, function (store) { return mkTestClear(store, bulkInjectCount, 8, 512); }, "Clearing " + bulkInjectCount + " 512-byte elements");
 
-        benchmark.start(function() {
+        benchmark.prepareTests();
+    }
+
+    function startTest() {
+        $("#startbutton").attr("disabled", "disabled");
+        $("#startbutton").removeClass("active").addClass("inactive");
+
+        benchmark.startTests(function() {
+            $("#startbutton").hide();
             makeFinalChart(benchmark, $("#finalchart"));
             localStorageTester.close(function() {
                 indexedDbTester.close(function() {
@@ -76,10 +85,15 @@
     }
 
     google.load("visualization", "1", {packages:["corechart"]});
-    var drawChartSynchronizer = mk_sync_func(startTest, 2);
+    var drawChartSynchronizer = mk_sync_func(function() {
+        initTests();
+        $("#startbutton").removeAttr("disabled").html("Click to start the tests!").removeClass("inactive").addClass("active");;
+    }, 2);
     google.setOnLoadCallback(drawChartSynchronizer);
 
     $(document).ready(function() {
+        $("#startbutton").click(startTest);
+
         $("#ua").html(navigator.userAgent);
 
         function openIfAvailable(storage, name) {
