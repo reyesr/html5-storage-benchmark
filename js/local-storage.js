@@ -34,12 +34,13 @@ function LocalStorageAccess() {
 
     function bulk(keys, values, offset, batchSize, callback) {
         if (offset >= keys.length) {
-            return callback();
+            callback(true);
+        } else {
+            for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
+                localStorage[keys[i]] = values[i];
+            }
+            setTimeout(function() { bulk(keys, values, offset+batchSize, batchSize, callback); }, 0);
         }
-        for (var i= offset, max = Math.min(keys.length, offset + batchSize); i<max; ++i) {
-            localStorage[keys[i]] = values[i];
-        }
-        setTimeout(function() { bulk(keys, values, offset+batchSize, batchSize, callback); }, 0);
     }
 
     this.injectBulk = function(keys, values, callback) {
@@ -47,20 +48,8 @@ function LocalStorageAccess() {
     }
 
     this.clear = function(callback) {
-
-        function doclear(batchSize) {
-            var i = 0;
-            for (var k in localStorage) {
-                localStorage.removeItem(k);
-                if (++i > batchSize) {
-                    setTimeout(function() { doclear(batchSize) }, 0);
-                    return;
-                }
-            }
-            callback();
-        }
-
-        doclear(this.batchSize);
+        localStorage.clear();
+        callback(true);
     }
 
     this.lookup = function(key, callback) {

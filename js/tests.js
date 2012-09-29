@@ -80,14 +80,14 @@ function mkTestInject(store, count, keySize, valueSize) {
 
                 function injector(keys, values, offset, callback) {
                     if (offset >= keys.length) {
-                        return callback(true);
+                        callback(true);
+                    } else {
+                        index.inject(keys[offset], values[offset], function() {
+                            setTimeout(function() {
+                                injector(keys, values, offset+1, callback);
+                            },0);
+                        });
                     }
-
-                    index.inject(keys[offset], values[offset], function() {
-                        setTimeout(function() {
-                            injector(keys, values, offset+1, callback);
-                        },0);
-                    });
                 }
 
                 testManager.startTimer();
@@ -115,9 +115,35 @@ function mkTestInjectBulk(store, count, keySize, valueSize) {
                 }
 
                 testManager.startTimer();
-                index.injectBulk(keys, values, function() {
+                index.injectBulk(keys, values, function(res) {
                     testManager.stopTimer();
-                    testManager.testComplete(true);
+                    testManager.testComplete(res);
+                });
+            });
+        } else {
+            testManager.testComplete(false);
+        }
+    }
+}
+
+function mkTestClear(store, count, keySize, valueSize) {
+    return function(testManager) {
+        var index = store;
+        if (index) {
+            index.clear(function(b) {
+                var keys = [];
+                var values = [];
+                for (var i=0; i<count; ++i) {
+                    keys.push(mkRandomString(keySize));
+                    values.push(mkRandomString(valueSize));
+                }
+
+                index.injectBulk(keys, values, function() {
+                    testManager.startTimer();
+                    index.clear(function() {
+                        testManager.stopTimer();
+                        testManager.testComplete(true);
+                    });
                 });
             });
         } else {
