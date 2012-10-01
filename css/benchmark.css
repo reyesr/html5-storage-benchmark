@@ -39,6 +39,12 @@
     float: right;
 }
 
+.test .result2 {
+    float: right;
+    font-size: 1em;
+    font-style: normal;
+}
+
 #result .tests .status {
     float: right;
     width: 40%;
