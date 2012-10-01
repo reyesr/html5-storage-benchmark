@@ -41,23 +41,27 @@ function Benchmark($root) {
         return new Benchmark($root);
     }
 
-    this.tests = [];
-    this.results = [];
-    this.groupToDom = {};
-    this.groupDesc = {};
-
     var now = (function() {
         var perf = window.performance || {};
         var fn = perf.now || perf.mozNow || perf.webkitNow || perf.msNow || perf.oNow;
         return fn ? fn.bind(perf) : function() { return new Date().getTime(); };
     })();
 
+    this.reset = function() {
+        $root.html("");
+        this.tests = [];
+        this.results = [];
+        this.groupToDom = {};
+        this.groupDesc = {};
+    }
+
+    this.reset();
     /**
      * initializes the dom nodes for the test
      * @private
      */
     this.prepareTests = function() {
-        $root.html("");
+
         this.groupToDom = {};
         var self = this;
         var groups = this.getAvailableGroups();
@@ -93,7 +97,7 @@ function Benchmark($root) {
      */
     function TestManager(callback) {
         var startTime, endTime;
-        var success;
+        var success, opCount;
         this.startTimer = function() {
             startTime = now();
         };
@@ -109,6 +113,12 @@ function Benchmark($root) {
         };
         this.setError = function(err) {
             this.errorDescription = err;
+        }
+        this.setOperationCount = function(ops) {
+            opCount = ops;
+        }
+        this.getOperationCount = function() {
+            return opCount;
         }
     }
 
@@ -149,8 +159,13 @@ function Benchmark($root) {
                         test.dom.addClass(isSuccess?"passed":"failed");
                         var timed = tmgr.getTimeMillis();
                         self.results.push(tmgr);
-                        test.dom.find(".result").html(isSuccess?(timed.toFixed(2) + "ms"):tmgr.errorDescription);
-                        test.dom.find(".status").html(isSuccess?"Passed":"Failed");
+//                        tmgr.getOperationCount() && test.dom.find(".result2").html((timed / tmgr.getOperationCount()).toFixed(2) + " ms/op");
+                        tmgr.getOperationCount() && test.dom.find(".result").html((tmgr.getOperationCount()/timed).toFixed(2) + " op/ms");
+                        var ops;
+                        if (tmgr.getOperationCount()) {
+                            ops = tmgr.getOperationCount() / timed;
+                        }
+                        test.dom.find(".status").html(isSuccess?(timed.toFixed(2) + "ms"):"Failed");
                         test.result = {time: timed};
 
                         setTimeout(proc, 1);

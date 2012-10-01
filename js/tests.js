@@ -38,6 +38,7 @@ function mkTestLookup(store, count, keySize, valueSize) {
                         function readAndConsume(keyArr, valueArr, offset) {
                             if (offset >= keyArr.length) {
                                 testManager.stopTimer();
+                                testManager.setOperationCount(count);
                                 testManager.testComplete(true);
                             } else {
                                 index.lookup(keyArr[offset], function(val) {
@@ -50,8 +51,10 @@ function mkTestLookup(store, count, keySize, valueSize) {
                                 });
                             }
                         }
-                        testManager.startTimer();
-                        readAndConsume(keys, values, 0);
+                        setTimeout(function() {
+                            testManager.startTimer();
+                            readAndConsume(keys, values, 0);
+                        }, 2000);
                     },0);
                 });
             });
@@ -73,11 +76,12 @@ function mkTestInject(store, count, keySize, valueSize) {
                     values.push(mkRandomString(valueSize));
                 }
 
-                var synchronizer = mk_sync_func(function(res) {
-                    testManager.stopTimer();
-                    testManager.testComplete(true);
-                }, count);
-
+//                var synchronizer = mk_sync_func(function(res) {
+//                    testManager.stopTimer();
+//                    testManager.setOperationCount(count);
+//                    testManager.testComplete(true);
+//                }, count);
+//
                 function injector(keys, values, offset, callback) {
                     if (offset >= keys.length) {
                         callback(true);
@@ -93,6 +97,7 @@ function mkTestInject(store, count, keySize, valueSize) {
                 testManager.startTimer();
                 injector(keys,values,0, function() {
                     testManager.stopTimer();
+                    testManager.setOperationCount(count);
                     testManager.testComplete(true);
                 });
             });
@@ -117,6 +122,7 @@ function mkTestInjectBulk(store, count, keySize, valueSize) {
                 testManager.startTimer();
                 index.injectBulk(keys, values, function(res) {
                     testManager.stopTimer();
+                    testManager.setOperationCount(count);
                     testManager.testComplete(res);
                 });
             });

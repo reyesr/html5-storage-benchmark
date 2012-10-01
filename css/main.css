@@ -1,11 +1,12 @@
 body {
-    width: 800px;
+    width: 860px;
     margin: auto;
 }
 
-div.finalchart {
+div#finalchart {
     width: 100%;
-    height: 200px;
+    margin-bottom: 1em;
+    text-align: center;
 }
 
 .html5logo {
@@ -49,10 +50,6 @@ div.finalchart {
     font-weight: bold;
     font-size: 1.25em;
     clear: both;
-}
-
-div#finalchart {
-    text-align: center;
 }
 
 button#startbutton {
