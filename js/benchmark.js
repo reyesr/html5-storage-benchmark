@@ -159,7 +159,6 @@ function Benchmark($root) {
                         test.dom.addClass(isSuccess?"passed":"failed");
                         var timed = tmgr.getTimeMillis();
                         self.results.push(tmgr);
-//                        tmgr.getOperationCount() && test.dom.find(".result2").html((timed / tmgr.getOperationCount()).toFixed(2) + " ms/op");
                         tmgr.getOperationCount() && test.dom.find(".result").html((tmgr.getOperationCount()/timed).toFixed(2) + " op/ms");
                         var ops;
                         if (tmgr.getOperationCount()) {
@@ -168,7 +167,7 @@ function Benchmark($root) {
                         test.dom.find(".status").html(isSuccess?(timed.toFixed(2) + "ms"):"Failed");
                         test.result = {time: timed};
 
-                        setTimeout(proc, 1);
+                        setTimeout(proc, 300);
                     });
                     setTimeout(function() {
                         test.test(tmgr);

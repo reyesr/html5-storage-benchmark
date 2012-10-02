@@ -22,6 +22,9 @@ function WebSQLAccess() {
     this.storeName = "benchmark";
     this.dbSize = 1024*1024*5;
 
+    function commit(tx, callback) {
+        tx.executeSql("COMMIT", function(){callback(true)}, function(){callback(false)});
+    }
 
     this.open = function(callback) {
         var self = this;
@@ -76,12 +79,12 @@ function WebSQLAccess() {
     this.clear = function(callback) {
         var self = this;
         this.db.transaction(function(tx) {
-            tx.executeSql("DELETE FROM " + self.storeName,[], function(){callback(true);}, function(){callback(false);});
+            // tx.executeSql("DELETE FROM " + self.storeName,[], function(){callback(true);}, function(){callback(false);});
+            tx.executeSql("DELETE FROM " + self.storeName,[], function(){commit(tx,callback)}, function(){callback(false);});
         });
     }
 
     this.lookup = function(key, callback) {
-//        callback(localStorage[key]);
         var self = this;
         this.db.transaction(function(tx) {
             tx.executeSql("SELECT * FROM " + self.storeName + " WHERE key=?", [key],
