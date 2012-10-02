@@ -159,6 +159,7 @@ function Benchmark($root) {
                         test.dom.addClass(isSuccess?"passed":"failed");
                         var timed = tmgr.getTimeMillis();
                         self.results.push(tmgr);
+//                        tmgr.getOperationCount() && test.dom.find(".result2").html((timed / tmgr.getOperationCount()).toFixed(2) + " ms/op");
                         tmgr.getOperationCount() && test.dom.find(".result").html((tmgr.getOperationCount()/timed).toFixed(2) + " op/ms");
                         var ops;
                         if (tmgr.getOperationCount()) {
