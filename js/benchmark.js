@@ -168,7 +168,7 @@ function Benchmark($root) {
                         test.dom.find(".status").html(isSuccess?(timed.toFixed(2) + "ms"):"Failed");
                         test.result = {time: timed};
 
-                        setTimeout(proc, 1);
+                        setTimeout(proc, 300);
                     });
                     setTimeout(function() {
                         test.test(tmgr);

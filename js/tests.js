@@ -54,7 +54,7 @@ function mkTestLookup(store, count, keySize, valueSize) {
                         setTimeout(function() {
                             testManager.startTimer();
                             readAndConsume(keys, values, 0);
-                        }, 2000);
+                        }, 0);
                     },0);
                 });
             });
