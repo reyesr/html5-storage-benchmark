@@ -79,8 +79,8 @@ function WebSQLAccess() {
     this.clear = function(callback) {
         var self = this;
         this.db.transaction(function(tx) {
-            // tx.executeSql("DELETE FROM " + self.storeName,[], function(){callback(true);}, function(){callback(false);});
-            tx.executeSql("DELETE FROM " + self.storeName,[], function(){commit(tx,callback)}, function(){callback(false);});
+            tx.executeSql("DELETE FROM " + self.storeName,[], function(){callback(true);}, function(){callback(false);});
+            //tx.executeSql("DELETE FROM " + self.storeName,[], function(){commit(tx,callback)}, function(){callback(false);});
         });
     }
 
