@@ -26,14 +26,15 @@ function IndexedDBAccess() {
         this.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.mozIDBTransaction || window.msIDBTransaction || {};
         this.READWRITEMODE  = this.IDBTransaction.readwrite || this.IDBTransaction.READ_WRITE || "readwrite";
         this.isAvailable = this.indexedDB && this.IDBTransaction && this.READWRITEMODE;
+
     } catch(e) {
         this.isAvailable = false;
     }
 
     this.open = function(callback) {
         var self = this;
-
         var openRequest = this.indexedDB.open(this.dbName, this.dbVersion);
+
         openRequest.onerror = function() {
             callback(false);
         };
@@ -111,8 +112,8 @@ function IndexedDBAccess() {
         var store = tx.objectStore(this.storeName);
         var req = store.clear();
         var result = true;
-        req.onsuccess = function(){};
-        req.onerror = function(){result=false};
+        req.onsuccess = function(){  };
+        req.onerror = function(){ result=false; };
         tx.oncomplete = function() { callback(result);};
         tx.onerror = function() { callback(false);};
     }
