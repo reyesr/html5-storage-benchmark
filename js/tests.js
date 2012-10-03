@@ -24,16 +24,15 @@
  */
 function mkTestLookup(store, count, keySize, valueSize) {
     return function(testManager) {
-        var index = store;
-        if (index) {
-            index.clear(function(b) {
+        if (store && store.isAvailable) {
+            store.clear(function(b) {
                 var keys = [];
                 var values = [];
                 for (var i=0; i<count; ++i) {
                     keys.push(mkRandomString(keySize));
                     values.push(mkRandomString(valueSize));
                 }
-                index.injectBulk(keys, values, function() {
+                store.injectBulk(keys, values, function() {
                     setTimeout(function() {
                         function readAndConsume(keyArr, valueArr, offset) {
                             if (offset >= keyArr.length) {
@@ -41,7 +40,7 @@ function mkTestLookup(store, count, keySize, valueSize) {
                                 testManager.setOperationCount(count);
                                 testManager.testComplete(true);
                             } else {
-                                index.lookup(keyArr[offset], function(val) {
+                                store.lookup(keyArr[offset], function(val) {
                                     if (val === false || val !== valueArr[offset]) {
                                         testManager.stopTimer();
                                         testManager.testComplete(false);
@@ -59,6 +58,7 @@ function mkTestLookup(store, count, keySize, valueSize) {
                 });
             });
         } else {
+            testManager.setError("not avail.");
             testManager.testComplete(false);
         }
     }
@@ -66,9 +66,8 @@ function mkTestLookup(store, count, keySize, valueSize) {
 
 function mkTestInject(store, count, keySize, valueSize) {
     return function(testManager) {
-        var index = store;
-        if (index) {
-            index.clear(function(b) {
+        if (store && store.isAvailable) {
+            store.clear(function(b) {
                 var keys = [];
                 var values = [];
                 for (var i=0; i<count; ++i) {
@@ -76,17 +75,11 @@ function mkTestInject(store, count, keySize, valueSize) {
                     values.push(mkRandomString(valueSize));
                 }
 
-//                var synchronizer = mk_sync_func(function(res) {
-//                    testManager.stopTimer();
-//                    testManager.setOperationCount(count);
-//                    testManager.testComplete(true);
-//                }, count);
-//
                 function injector(keys, values, offset, callback) {
                     if (offset >= keys.length) {
                         callback(true);
                     } else {
-                        index.inject(keys[offset], values[offset], function() {
+                        store.inject(keys[offset], values[offset], function() {
                             setTimeout(function() {
                                 injector(keys, values, offset+1, callback);
                             },0);
@@ -102,6 +95,7 @@ function mkTestInject(store, count, keySize, valueSize) {
                 });
             });
         } else {
+            testManager.setError("not avail.");
             testManager.testComplete(false);
         }
     }
@@ -109,9 +103,8 @@ function mkTestInject(store, count, keySize, valueSize) {
 
 function mkTestInjectBulk(store, count, keySize, valueSize) {
     return function(testManager) {
-        var index = store;
-        if (index) {
-            index.clear(function(b) {
+        if (store && store.isAvailable) {
+            store.clear(function(b) {
                 var keys = [];
                 var values = [];
                 for (var i=0; i<count; ++i) {
@@ -120,13 +113,14 @@ function mkTestInjectBulk(store, count, keySize, valueSize) {
                 }
 
                 testManager.startTimer();
-                index.injectBulk(keys, values, function(res) {
+                store.injectBulk(keys, values, function(res) {
                     testManager.stopTimer();
                     testManager.setOperationCount(count);
                     testManager.testComplete(res);
                 });
             });
         } else {
+            testManager.setError("not avail.");
             testManager.testComplete(false);
         }
     }
@@ -134,9 +128,8 @@ function mkTestInjectBulk(store, count, keySize, valueSize) {
 
 function mkTestClear(store, count, keySize, valueSize) {
     return function(testManager) {
-        var index = store;
-        if (index) {
-            index.clear(function(b) {
+        if (store && store.isAvailable) {
+            store.clear(function(b) {
                 var keys = [];
                 var values = [];
                 for (var i=0; i<count; ++i) {
@@ -144,15 +137,16 @@ function mkTestClear(store, count, keySize, valueSize) {
                     values.push(mkRandomString(valueSize));
                 }
 
-                index.injectBulk(keys, values, function() {
+                store.injectBulk(keys, values, function() {
                     testManager.startTimer();
-                    index.clear(function() {
+                    store.clear(function() {
                         testManager.stopTimer();
                         testManager.testComplete(true);
                     });
                 });
             });
         } else {
+            testManager.setError("not avail.");
             testManager.testComplete(false);
         }
     }

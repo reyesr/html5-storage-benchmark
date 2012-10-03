@@ -2,6 +2,10 @@ body {
     width: 860px;
     margin: auto;
 }
+div#result {
+    text-align: left;
+}
+
 
 div#finalchart {
     width: 100%;
@@ -107,4 +111,47 @@ button#startbutton.active:hover {
     border: 1px solid #FAFAFA;
     padding: 11px 20px;
     opacity: 1;
+}
+div#displayOptions {
+    float: right;
+}
+
+div.advanced-options {
+    margin: auto;
+    width: 60%;
+    padding: 8px;
+    display: none;
+}
+
+div.advanced-options div.optionline {
+    background: rgb(89,133,188);
+    border: 1px solid rgb(59,103,158);
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding: 2px;
+    clear: both;
+}
+
+div.advanced-options div.optionline:after {
+    content: " ";
+    display: block;
+    clear: both;
+    height: 0px;
+    width: 0px;
+}
+
+div.advanced-options label {
+    display: inline-block;
+    width: 59%;
+    text-align: right;
+    float: left;
+    padding-right: 1em;
+}
+
+div.advanced-options div.inputcont {
+    display: inline-block;
+    width: 30%;
+    text-align: right;
+    float: left;
+    text-align: left;
 }

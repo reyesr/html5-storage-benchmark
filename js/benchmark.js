@@ -148,7 +148,7 @@ function Benchmark($root) {
                 var test = remaining.shift();
                 if (typeof test === "string") {
                     addChart(self.groupToDom[test].find(".chart"), test, self.getForGroup(test));
-                    setTimeout(proc, 300);
+                    setTimeout(proc, 750);
                 } else {
                     test.dom.addClass("running");
                     test.dom.find(".status").html("Running...");
@@ -159,8 +159,11 @@ function Benchmark($root) {
                         test.dom.addClass(isSuccess?"passed":"failed");
                         var timed = tmgr.getTimeMillis();
                         self.results.push(tmgr);
-//                        tmgr.getOperationCount() && test.dom.find(".result2").html((timed / tmgr.getOperationCount()).toFixed(2) + " ms/op");
-                        tmgr.getOperationCount() && test.dom.find(".result").html((tmgr.getOperationCount()/timed).toFixed(2) + " op/ms");
+                        if (isSuccess) {
+                            tmgr.getOperationCount()>=0 && test.dom.find(".result").html((tmgr.getOperationCount()/timed).toFixed(2) + " op/ms");
+                        } else {
+                            test.dom.find(".result").html(tmgr.errorDescription?tmgr.errorDescription:"");
+                        }
                         var ops;
                         if (tmgr.getOperationCount()) {
                             ops = tmgr.getOperationCount() / timed;
@@ -168,11 +171,11 @@ function Benchmark($root) {
                         test.dom.find(".status").html(isSuccess?(timed.toFixed(2) + "ms"):"Failed");
                         test.result = {time: timed};
 
-                        setTimeout(proc, 300);
+                        setTimeout(proc, 500);
                     });
                     setTimeout(function() {
                         test.test(tmgr);
-                    }, 1);
+                    }, 500);
                 }
             }
         }
@@ -210,20 +213,6 @@ function Benchmark($root) {
         var chart = new google.visualization.ColumnChart($dom.children("div").get(0));
         chart.draw(data, options);
     }
-
-//    /**
-//     * Initialize the dom with the tests added, and start the test execution. Needs to be called when all the tests have been added with addTest().
-//     * @param callback
-//     */
-//    this.start = function(callback) {
-//        this.prepareTests();
-//        var self = this;
-//        setTimeout(function() {
-//            self.startTests(function() {
-//                callback();
-//            });
-//        }, 50);
-//    };
 
     /**
      * Returns an array of all the group added to this object.
