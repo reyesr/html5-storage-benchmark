@@ -13,6 +13,7 @@
     <script type="text/javascript" src="js/indexeddb-storage.js"></script>
     <script type="text/javascript" src="js/websql-storage.js"></script>
     <script type="text/javascript" src="js/benchmark.js"></script>
+    <script type="text/javascript" src="js/debug.js"></script>
 
     <link rel="stylesheet" type="text/css" href="css/main.css" />
     <link rel="stylesheet" type="text/css" href="css/benchmark.css" />
@@ -28,20 +29,49 @@
 <div id="finalchart">
     <button class="inactive" disabled="disabled" id="startbutton">Initializing...</button>
     <div id="choices">
+        <div id="displayOptions"><a href="">Advanced options</a></div>
         <input type="checkbox" checked="checked" id="localStorageChoice"> <label for="localStorageChoice">localStorage</label>
         <input type="checkbox" checked="checked" id="webSQLChoice"> <label for="webSQLChoice">WebSQL</label>
         <input type="checkbox" checked="checked" id="indexedDBChoice"> <label for="indexedDBChoice">IndexedDB</label>
     </div>
+    <div>
+        <div class="advanced-options">
+            <div class="optionline">
+                <label for="injectCount">Injection count #</label>
+                <div class="inputcont"><input id="injectCount" type="number" size="5" value="50"></div>
+            </div>
+            <div class="optionline">
+                <label for="injectCount">Bulk Injection count #</label>
+                <div class="inputcont"><input id="injectBulkCount" type="number" size="5" value="2000"></div>
+            </div>
+            <div class="optionline">
+                <label for="injectSizeS">Data size S (in bytes)</label>
+                <div class="inputcont"><input id="injectSizeS" type="number" size="5" value="8"></div>
+            </div>
+            <div class="optionline">
+                <label for="injectSizeL">Data size L (in bytes)</label>
+                <div class="inputcont"><input id="injectSizeL" type="number" size="5" value="512"></div>
+            </div>
+            <div class="optionline">
+                <label for="bulkBatchSize">Bulk batch size</label>
+                <div class="inputcont"><input id="bulkBatchSize" type="number" size="5" value="100"></div>
+            </div>
+        </div>
+    </div>
 </div>
-<div id="charts"></div>
-<div id="result"></div>
 
-<script type="text/javascript">
+    <div id="result"></div>
+    <div id="charts"></div>
+    <div id="debug"></div>
 
-    var localStorageTester = new LocalStorageAccess();
+    <script type="text/javascript">
+        window.console = new LocalDebug($("#debug"));
+
+        var localStorageTester = new LocalStorageAccess();
     var indexedDbTester = new IndexedDBAccess();
     var webSQLTester = new WebSQLAccess();
     var benchmark = new Benchmark($("#result"));
+
 
     function testDisabled(testManager) {
         testManager.setError("not available");
@@ -59,32 +89,40 @@
     }
 
     function initTests() {
-        var injectCount = 50;
-        var bulkInjectCount = 2000;
+        var injectCount = parseInt($("#injectCount").val());
+        var bulkInjectCount = parseInt($("#injectBulkCount").val());
+        var sizeS = parseInt($("#injectSizeS").val());
+        var sizeL = parseInt($("#injectSizeL").val());
+        var batchSize = parseInt($("#bulkBatchSize").val());
+        var keySize = 8;
         var indexes = [];
 
-        $("#localStorageChoice").is(":checked") &&  indexes.push(localStorageTester);
+        localStorageTester.batchSize = webSQLTester.batchSize = indexedDbTester.batchSize = batchSize;
+
+        $("#localStorageChoice").is(":checked") && indexes.push(localStorageTester);
         $("#webSQLChoice").is(":checked") &&  indexes.push(webSQLTester);
         $("#indexedDBChoice").is(":checked") &&  indexes.push(indexedDbTester);
 
         benchmark.reset();
-        createTest("Lookup", indexes, function (store) { return mkTestLookup(store, injectCount, 8, 8); }, "Looking up " + injectCount + "x 8-byte elements, one by one");
-        createTest("Lookup2", indexes, function (store) { return mkTestLookup(store, bulkInjectCount, 8, 8); }, "Looking up " + bulkInjectCount + "x 8-byte elements, one by one");
-        createTest("Inject-S", indexes, function (store) { return mkTestInject(store, injectCount, 8, 8); }, "Injecting " + injectCount + "x 8-byte elements, one by one");
-        createTest("Inject-L", indexes, function (store) { return mkTestInject(store, injectCount, 8, 512); }, "Injecting " + injectCount + "x 512-byte elements, one by one");
-        createTest("InjectBulk-S", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 8); }, "Injecting " + bulkInjectCount + "x 8-byte elements, in bulk");
-        createTest("InjectBulk-L", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, 8, 512); }, "Injecting " + bulkInjectCount + "x 512-byte elements, in bulk");
-        createTest("Clear", indexes, function (store) { return mkTestClear(store, bulkInjectCount, 8, 512); }, "Clearing " + bulkInjectCount + " 512-byte elements");
+        createTest("Lookup", indexes, function (store) { return mkTestLookup(store, injectCount, keySize, sizeS); }, "Looking up " + injectCount + "x "+ sizeS + "-byte elements, one by one");
+        createTest("Lookup2", indexes, function (store) { return mkTestLookup(store, bulkInjectCount, keySize, sizeS); }, "Looking up " + bulkInjectCount + "x "+ sizeS + "-byte elements, one by one");
+        createTest("Inject-S", indexes, function (store) { return mkTestInject(store, injectCount, keySize, sizeS); }, "Injecting " + injectCount + "x "+ sizeS + "-byte elements, one by one");
+        createTest("Inject-L", indexes, function (store) { return mkTestInject(store, injectCount, keySize, sizeL); }, "Injecting " + injectCount + "x "+ sizeL + "-byte elements, one by one");
+        createTest("InjectBulk-S", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, keySize, sizeS); }, "Injecting " + bulkInjectCount + "x "+ sizeS + "-byte elements, in bulk");
+        createTest("InjectBulk-L", indexes, function (store) { return mkTestInjectBulk(store, bulkInjectCount, keySize, sizeL); }, "Injecting " + bulkInjectCount + "x "+ sizeL + "-byte elements, in bulk");
+        createTest("Clear", indexes, function (store) { return mkTestClear(store, bulkInjectCount, keySize, sizeL); }, "Clearing " + bulkInjectCount + " "+ sizeL + "-byte elements");
 
         benchmark.prepareTests();
     }
 
     function startTest() {
+        initTests();
         $("#startbutton").attr("disabled", "disabled");
         $("#startbutton").removeClass("active").addClass("inactive");
         $("#localStorageChoice").attr("disabled", "disabled");
         $("#webSQLChoice").attr("disabled", "disabled");
         $("#indexedDBChoice").attr("disabled", "disabled");
+        $(".advanced-options").find("input").attr("disabled", "disabled");
 
         benchmark.startTests(function() {
             $("#startbutton").hide();
@@ -128,9 +166,12 @@
         $("#localStorageChoice").change(initTests);
         $("#webSQLChoice").change(initTests);
         $("#indexedDBChoice").change(initTests);
+        $("#displayOptions").click(function(e){
+            e.preventDefault();
+            $("div.advanced-options").toggle();
+        })
     });
 
     </script>
-
-    </body>
+</body>
 </html>
